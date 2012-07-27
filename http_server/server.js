@@ -52,12 +52,36 @@ function page(req, res) {
       res.writeHead(404);
       res.end('File not found\n'.red);
     } else {
-      res.writeHead(200);
+      res.writeHead(200, {'Content-Type': 'text/html'});
       res.end(page);
     }
   });
+}
+
+function stream_page(req, res) {
+  // Get a readable stream of data from our file system.
+  var readStream = fs.createReadStream('page.html', {encoding: 'utf8'});
+  // When that stream emits a data event, write the data to our response
+  readStream.on('data', function(data) {
+    res.write(data);
+  });
+
+  // When we are finished reading the stream, send the response with the
+  // correct header
+  readStream.on('end', function() {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    res.end();
+  });
+
+  // If we get an error while processing the read stream, end the response
+  // with a 404.
+  readStream.on('error', function(err) {
+    res.writeHead(404);
+    res.end('File not found\n'.red);
+  });
 
 }
+
 var router = {
   '/': index,
   '/home(.+)': home,
